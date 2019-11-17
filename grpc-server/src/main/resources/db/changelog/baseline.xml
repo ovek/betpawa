@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd"
+                   logicalFilePath="changelog/baseline.xml">
+
+    <changeSet id="baseline-schema" author="baseline">
+        <sql>
+            SET statement_timeout = 0;
+            SET lock_timeout = 0;
+            SET client_encoding = 'UTF8';
+            SET standard_conforming_strings = on;
+            SET check_function_bodies = false;
+            SET client_min_messages = warning;
+        </sql>
+        <sql endDelimiter="\n/\s*\n|\n/\s*$">
+            CREATE SCHEMA IF NOT EXISTS wallet;
+
+            ALTER SCHEMA wallet OWNER TO ${owner};
+
+            REVOKE ALL ON SCHEMA wallet FROM PUBLIC;
+            GRANT USAGE ON SCHEMA wallet TO ${rw};
+
+        </sql>
+    </changeSet>
+
+    <changeSet id="baseline-sql" author="baseline">
+        <sql>
+            SET search_path = wallet;
+        </sql>
+        <sqlFile path="baseline/baseline.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <changeSet id="baseline-grants" author="baseline">
+        <sql>
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA wallet TO ${rw};
+            GRANT ALL ON ALL SEQUENCES IN SCHEMA wallet TO ${rw};
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

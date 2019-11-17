@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_generic_services = true;
+
+message BalanceRequest {
+    string userId = 1;
+}
+
+message Balance {
+    string balanceId = 1;
+    double amount = 2;
+    string ccy = 3;
+}
+
+message BalanceResponse {
+    repeated Balance balances = 1;
+}
+
+
+service BalanceService {
+    rpc Balance(BalanceRequest) returns (BalanceResponse);
+}

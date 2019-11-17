@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+  postgres:
+    image: postgres:9.6
+    container_name: betpawa-postgres
+    environment:
+      POSTGRES_USER: "betpawaAdmin"
+      POSTGRES_PASSWORD: "Agkk342sSDDSVCX1234LKEQ"
+      LANG: "en_US.UTF-8"
+    ports:
+      - "5432:5432"

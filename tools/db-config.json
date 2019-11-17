@@ -1,0 +1,9 @@
+{
+  "local": {
+    "databaseUrl": "localhost",
+    "databasePort": "5432",
+    "databaseAdminDb": "postgres",
+    "databaseAdminUsername": "betpawaAdmin",
+    "databaseAdminPassword": "Agkk342sSDDSVCX1234LKEQ"
+  }
+}

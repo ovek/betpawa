@@ -1,0 +1,17 @@
+syntax = "proto3";
+option java_generic_services = true;
+
+message DepositRequest {
+    string userId = 1;
+    double amount = 2;
+    string ccy = 3;
+}
+
+message DepositResponse {
+    string message = 1;
+}
+
+
+service Deposit {
+    rpc Deposit(DepositRequest) returns (DepositResponse);
+}

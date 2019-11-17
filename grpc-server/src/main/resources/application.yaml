@@ -1,0 +1,34 @@
+server:
+    port: 9090
+
+grpc:
+    server:
+        port: 9091
+
+spring:
+    jpa:
+        show-sql: true
+    application:
+        name: grpc-server
+
+eureka:
+    instance:
+        securePortEnabled: false
+        nonSecurePort: ${grpc.server.port}
+
+spring.datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/wallet_db
+    username: wallet_app
+    password: wallet_app
+
+spring.liquibase:
+    change-log: classpath:db/changelog/master.xml
+    url:  jdbc:postgresql://localhost:5432/wallet_db
+    user: wallet_migrator
+    password: wallet_migrator
+    parameters:
+        owner: wallet_owner
+        rw: wallet_rw
+
