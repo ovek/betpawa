@@ -8,6 +8,7 @@ grpc:
 spring:
     jpa:
         show-sql: true
+        open-in-view: false
     application:
         name: grpc-server
 
