@@ -1,21 +1,11 @@
 server:
     port: 9090
 
-grpc:
-    server:
-        port: 9091
-
 spring:
     jpa:
-        show-sql: true
         open-in-view: false
     application:
         name: grpc-server
-
-eureka:
-    instance:
-        securePortEnabled: false
-        nonSecurePort: ${grpc.server.port}
 
 spring.datasource:
     type: com.zaxxer.hikari.HikariDataSource

@@ -17,6 +17,7 @@ dependencies {
     implementation 'io.grpc:grpc-netty-shaded:1.24.0'
     implementation 'io.grpc:grpc-protobuf:1.24.0'
     implementation 'io.grpc:grpc-stub:1.24.0'
+    implementation'org.apache.commons:commons-lang3:3.9'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }

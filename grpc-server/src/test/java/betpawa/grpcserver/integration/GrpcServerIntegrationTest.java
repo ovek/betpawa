@@ -22,7 +22,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.MOCK;
 
 import org.mockito.InjectMocks;
@@ -89,121 +88,50 @@ public class GrpcServerIntegrationTest {
         userBlockingStub.user(UserOuterClass.UserRequest.newBuilder().setUserId(userId).build());
 
         /* Withdraw 200 USD - must fail with insufficient funds*/
-        WithdrawOuterClass.WithdrawalRequest withdrawalRequest = WithdrawOuterClass.WithdrawalRequest.newBuilder()
-                .setAmount(200)
-                .setCcy(Currency.USD)
-                .setUserId(userId)
-                .build();
-
-        WithdrawOuterClass.WithdrawalResponse response = withdrawBlockingStub.withdraw(withdrawalRequest);
+        WithdrawOuterClass.WithdrawalResponse response = withdraw(userId, 200, Currency.USD);
         assertEquals(ReturnMessage.INSUFFICIENT_FUNDS, response.getMessage());
 
         /* Deposit 100 USD */
-        DepositOuterClass.DepositRequest depositRequest = DepositOuterClass.DepositRequest.newBuilder()
-                .setAmount(100)
-                .setCcy(Currency.USD)
-                .setUserId(userId).build();
-
-        DepositOuterClass.DepositResponse depositResponse = depositBlockingStub.deposit(depositRequest);
+        deposit(userId, 100, Currency.USD);
 
         /* Validate balance is 100 USD */
-        BalanceOuterClass.BalanceRequest balanceRequest = BalanceOuterClass.BalanceRequest.newBuilder()
-                .setUserId(userId).build();
 
-        BalanceOuterClass.BalanceResponse balanceResponse = balanceServiceBlockingStub.balance(balanceRequest);
+        BalanceOuterClass.BalanceResponse balanceResponse = getBalance(userId);
 
-        BalanceOuterClass.Balance balance = filterBalances(balanceResponse, Currency.USD);
-        assertEquals(balance.getAmount(), 100, 0);
-
-        balance = filterBalances(balanceResponse, Currency.EUR);
-        assertEquals(balance.getAmount(), 0, 0);
-
-        balance = filterBalances(balanceResponse, Currency.GBP);
-        assertEquals(balance.getAmount(), 0, 0);
+        validateBalances(balanceResponse, 0, 100, 0);
 
         /* Withdrawal 200 USD - must fail with insufficient funds */
-        withdrawalRequest = WithdrawOuterClass.WithdrawalRequest.newBuilder()
-                .setAmount(200)
-                .setCcy(Currency.USD)
-                .setUserId(userId)
-                .build();
-
-        response = withdrawBlockingStub.withdraw(withdrawalRequest);
+        response = withdraw(userId, 200, Currency.USD);
         assertEquals(ReturnMessage.INSUFFICIENT_FUNDS, response.getMessage());
 
         /* Deposit 100 EUR */
-        depositRequest = DepositOuterClass.DepositRequest.newBuilder()
-                .setAmount(100)
-                .setCcy(Currency.EUR)
-                .setUserId(userId).build();
-        depositResponse = depositBlockingStub.deposit(depositRequest);
+        deposit(userId, 100, Currency.EUR);
 
         /* Validate balances - must be 100 USD and 100 EUR */
-        balanceResponse = balanceServiceBlockingStub.balance(balanceRequest);
-
-        balance = filterBalances(balanceResponse, Currency.USD);
-        assertEquals(balance.getAmount(), 100, 0);
-
-        balance = filterBalances(balanceResponse, Currency.EUR);
-        assertEquals(balance.getAmount(), 100, 0);
-
-        balance = filterBalances(balanceResponse, Currency.GBP);
-        assertEquals(balance.getAmount(), 0, 0);
+        balanceResponse = getBalance(userId);
+        validateBalances(balanceResponse, 100, 100, 0);
 
         /* Make a withdrawal of 200 USD - must return insufficient funds */
-        response = withdrawBlockingStub.withdraw(withdrawalRequest);
+        response = withdraw(userId, 200, Currency.USD);
         assertEquals(ReturnMessage.INSUFFICIENT_FUNDS, response.getMessage());
 
         /* Deposit 100 USD */
-        depositRequest = DepositOuterClass.DepositRequest.newBuilder()
-                .setAmount(100)
-                .setCcy(Currency.USD)
-                .setUserId(userId).build();
-
-        depositResponse = depositBlockingStub.deposit(depositRequest);
+        deposit(userId, 100, Currency.USD);
 
         /* Validate balances - must be 200 USD and 100 EUR */
-        balanceResponse = balanceServiceBlockingStub.balance(balanceRequest);
-
-        balance = filterBalances(balanceResponse, Currency.USD);
-        assertEquals(balance.getAmount(), 200, 0);
-
-        balance = filterBalances(balanceResponse, Currency.EUR);
-        assertEquals(balance.getAmount(), 100, 0);
-
-        balance = filterBalances(balanceResponse, Currency.GBP);
-        assertEquals(balance.getAmount(), 0, 0);
+        balanceResponse = getBalance(userId);
+        validateBalances(balanceResponse, 100, 200, 0);
 
         /* Withdrawal 200 USD - must succeed */
-        withdrawalRequest = WithdrawOuterClass.WithdrawalRequest.newBuilder()
-                .setAmount(200)
-                .setCcy(Currency.USD)
-                .setUserId(userId)
-                .build();
-
-        response = withdrawBlockingStub.withdraw(withdrawalRequest);
+        response = withdraw(userId, 200, Currency.USD);
         assertEquals(response.getMessage(), ReturnMessage.OK);
 
         /* Validate balances - must be 0 USD and 100 EUR */
-        balanceResponse = balanceServiceBlockingStub.balance(balanceRequest);
-
-        balance = filterBalances(balanceResponse, Currency.USD);
-        assertEquals(balance.getAmount(), 0, 0);
-
-        balance = filterBalances(balanceResponse, Currency.EUR);
-        assertEquals(balance.getAmount(), 100, 0);
-
-        balance = filterBalances(balanceResponse, Currency.GBP);
-        assertEquals(balance.getAmount(), 0, 0);
+        balanceResponse = getBalance(userId);
+        validateBalances(balanceResponse, 100, 0, 0);
 
         /* Withdrawal 200 USD - must fail with insufficient funds */
-        withdrawalRequest = WithdrawOuterClass.WithdrawalRequest.newBuilder()
-                .setAmount(200)
-                .setCcy(Currency.USD)
-                .setUserId(userId)
-                .build();
-
-        response = withdrawBlockingStub.withdraw(withdrawalRequest);
+        response = withdraw(userId, 200, Currency.USD);
         assertEquals(ReturnMessage.INSUFFICIENT_FUNDS, response.getMessage());
     }
 
@@ -212,6 +140,50 @@ public class GrpcServerIntegrationTest {
                 .stream()
                 .filter(bal -> currencyCode.equals(bal.getCcy()))
                 .findFirst().get();
+    }
+
+    private DepositOuterClass.DepositResponse deposit(String userId,
+                                                     double amount,
+                                                     String currencyCode) {
+        DepositOuterClass.DepositRequest depositRequest = DepositOuterClass.DepositRequest.newBuilder()
+                .setAmount(amount)
+                .setCcy(currencyCode)
+                .setUserId(userId)
+                .build();
+
+        return depositBlockingStub.deposit(depositRequest);
+    }
+
+    private WithdrawOuterClass.WithdrawalResponse withdraw(String userId,
+                                                          double amount,
+                                                          String currencyCode) {
+        WithdrawOuterClass.WithdrawalRequest withdrawalRequest = WithdrawOuterClass.WithdrawalRequest.newBuilder()
+                .setAmount(amount)
+                .setCcy(currencyCode)
+                .setUserId(userId)
+                .build();
+
+        return withdrawBlockingStub.withdraw(withdrawalRequest);
+    }
+
+    private BalanceOuterClass.BalanceResponse getBalance(String userId) {
+        BalanceOuterClass.BalanceRequest balanceRequest = BalanceOuterClass.BalanceRequest.newBuilder()
+                .setUserId(userId)
+                .build();
+
+        return balanceServiceBlockingStub.balance(balanceRequest);
+    }
+
+    private void validateBalances(BalanceOuterClass.BalanceResponse balanceResponse,
+                                  double euro, double usd, double gbp) {
+        BalanceOuterClass.Balance balance = filterBalances(balanceResponse, Currency.USD);
+        assertEquals(balance.getAmount(), usd, 0);
+
+        balance = filterBalances(balanceResponse, Currency.EUR);
+        assertEquals(balance.getAmount(), euro, 0);
+
+        balance = filterBalances(balanceResponse, Currency.GBP);
+        assertEquals(balance.getAmount(), gbp, 0);
     }
 
 }

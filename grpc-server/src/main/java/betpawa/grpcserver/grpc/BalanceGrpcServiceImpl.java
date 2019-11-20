@@ -26,7 +26,7 @@ public class BalanceGrpcServiceImpl extends BalanceServiceGrpc.BalanceServiceImp
     @Override
     public void balance(BalanceOuterClass.BalanceRequest request,
                         StreamObserver<BalanceOuterClass.BalanceResponse> responseObserver) {
-        logger.debug("Balance: userId={}", request.getUserId());
+        logger.info("Balance: userId={}", request.getUserId());
         List<Balance> balances = balanceService.getBalances(request.getUserId());
         BalanceOuterClass.BalanceResponse response = BalanceOuterClass.BalanceResponse.newBuilder()
                 .addAllBalances(build(balances)).build();
@@ -35,7 +35,7 @@ public class BalanceGrpcServiceImpl extends BalanceServiceGrpc.BalanceServiceImp
     }
 
     private List<BalanceOuterClass.Balance> build(List<Balance> balances) {
-        List<BalanceOuterClass.Balance> grpcBalances = new ArrayList();
+        List<BalanceOuterClass.Balance> grpcBalances = new ArrayList<>();
 
         balances.forEach(balance -> {
             grpcBalances.add(BalanceOuterClass.Balance.newBuilder()
