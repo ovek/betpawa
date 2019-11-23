@@ -83,6 +83,15 @@ public class GrpcClientApplication implements ApplicationRunner {
 
         countDownLatch.await();
         executorService.shutdown();
+
+        long startTime = System.currentTimeMillis();
+
+        /* stops the thread for measuring total time */
+        while(!executorService.isTerminated()) {}
+
+        long endTime = System.currentTimeMillis() - startTime;
+
+        logger.info("Total time - {}ms", endTime);
     }
 
     public DepositOuterClass.DepositResponse deposit(String userId,
